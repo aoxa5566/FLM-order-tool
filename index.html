@@ -3,11 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-<<<<<<< HEAD
-    <title>FLM 訂貨輔助工具</title>
-=======
     <title>FLM訂貨輔助工具</title>
->>>>>>> a474662 (修改複製備註)
     <style>
       body {
         font-family: sans-serif;
@@ -65,14 +61,14 @@
         border-radius: 6px;
         font-family: monospace;
       }
+      .calc-box {
+        margin-left: 10px;
+        color: blue;
+      }
     </style>
   </head>
   <body>
-<<<<<<< HEAD
-    <h2>FLM 訂貨輔助工具</h2>
-=======
     <h2>FLM訂貨輔助工具</h2>
->>>>>>> a474662 (修改複製備註)
 
     <label for="store-select">請選擇店家：</label>
     <select id="store-select" onchange="filterItems()">
@@ -118,7 +114,6 @@
         const container = document.getElementById("product-list");
         container.innerHTML = "";
         allItems = [];
-
         sheetIds.forEach((sheet) => (expandStatus[sheet] = false));
 
         for (const sheetName of sheetIds) {
@@ -141,22 +136,41 @@
 
             data.forEach((item) => {
               const storeField = (item.店家 || "").replace(/\s/g, "");
+              const boxCount = parseInt(item.箱入數, 10) || null;
+
               const div = document.createElement("div");
               div.className = "item";
               div.setAttribute("data-name", item.name || "");
               div.setAttribute("data-spec", item.規格 || "");
               div.setAttribute("data-unit", item.單位 || "");
               div.setAttribute("data-store", storeField);
+              if (boxCount) div.setAttribute("data-boxcount", boxCount);
               div.setAttribute("data-category", sheetName);
 
               div.innerHTML = `
-                <label>
-                  <span>${item.name}（規格:${item.規格 || ""} / 單位:${
-                item.單位 || ""
-              }）</span>
-                  <input type="number" min="0" value="0" />
-                </label>
-              `;
+<label>
+  <span>${item.name}（規格:${item.規格} / 單位:${item.單位 || ""}）</span><br>
+  數量: <input type="number" min="0" value="0" class="pcs-input" style="width:80px">
+  <span class="calc-box"></span>
+</label>
+`;
+
+              const pcsInput = div.querySelector(".pcs-input");
+              const calcSpan = div.querySelector(".calc-box");
+
+              pcsInput.addEventListener("input", () => {
+                const qty = parseInt(pcsInput.value, 10) || 0;
+                if (boxCount) {
+                  const boxes = Math.floor(qty / boxCount);
+                  const remainder = qty % boxCount;
+                  let text = "";
+                  if (boxes > 0) text += `${boxes}箱 `;
+                  if (remainder > 0) text += `${remainder}${item.單位}`;
+                  calcSpan.textContent = text;
+                } else {
+                  calcSpan.textContent = qty > 0 ? `${qty}${item.單位}` : "";
+                }
+              });
 
               listDiv.appendChild(div);
               allItems.push({ element: div, category: sheetName });
@@ -165,7 +179,6 @@
             section.appendChild(title);
             section.appendChild(listDiv);
             container.appendChild(section);
-
             updateSectionDisplay(sheetName);
           } catch (err) {
             const errorDiv = document.createElement("div");
@@ -189,7 +202,6 @@
       function filterItems() {
         const store = document.getElementById("store-select").value.trim();
         const keyword = document.getElementById("search").value.toLowerCase();
-
         const matchedCategories = new Set();
 
         allItems.forEach(({ element, category }) => {
@@ -201,16 +213,13 @@
           const name = element.getAttribute("data-name").toLowerCase();
           const spec = element.getAttribute("data-spec").toLowerCase();
           const unit = element.getAttribute("data-unit").toLowerCase();
-
           const matchesSearch =
             name.includes(keyword) ||
             spec.includes(keyword) ||
             unit.includes(keyword);
 
           const matched = matchesStore && matchesSearch;
-
           element.style.display = matched ? "flex" : "none";
-
           if (matched) matchedCategories.add(category);
         });
 
@@ -229,52 +238,54 @@
 
         const orderDate = document.getElementById("order-date").value;
         const remark = document.getElementById("remark").value.trim();
-
         const selected = [];
         const unselected = [];
 
         allItems.forEach(({ element }) => {
           if (element.style.display === "flex") {
-            const qtyInput = element.querySelector("input[type='number']");
-            const qty = parseInt(qtyInput.value, 10) || 0;
+            const pcsQty =
+              parseInt(element.querySelector(".pcs-input").value, 10) || 0;
             const name = element.getAttribute("data-name");
             const unit = element.getAttribute("data-unit") || "";
+            const boxCount =
+              parseInt(element.getAttribute("data-boxcount"), 10) || null;
 
-            if (qty > 0) {
-              selected.push(`${name} x ${qty} ${unit}`);
+            let finalText = "";
+            if (pcsQty > 0) {
+              if (boxCount) {
+                const boxes = Math.floor(pcsQty / boxCount);
+                const remainder = pcsQty % boxCount;
+                if (boxes > 0) finalText += `${boxes}箱 `;
+                if (remainder > 0) finalText += `${remainder}${unit}`;
+              } else {
+                finalText += `${pcsQty}${unit}`;
+              }
+              selected.push(`${name} x ${finalText}`);
             } else {
               unselected.push(name);
             }
           }
         });
 
-        let summary = `店家：${store}\n訂貨日期：${orderDate}\n\n`;
-        summary += "訂貨品項：\n";
+        let summary = `店家：${store}\n訂貨日期：${orderDate}\n\n訂貨品項：\n`;
         summary += selected.length ? selected.join("\n") : "（無）";
-
-        if (remark) {
-          summary += `\n\n備註：\n${remark}`;
-        }
-
+        if (remark) summary += `\n\n備註：\n${remark}`;
         let displayText = summary + "\n\n📦 未選擇品項（僅顯示，不複製）：\n";
         displayText += unselected.length ? unselected.join("\n") : "（無）";
 
         const summaryEl = document.getElementById("order-summary");
         summaryEl.textContent = displayText;
         summaryEl.setAttribute("data-copy-text", summary);
-
         document.getElementById("copy-btn").style.display = "block";
       }
 
       function copySummary() {
         const summaryEl = document.getElementById("order-summary");
         const textToCopy = summaryEl.getAttribute("data-copy-text") || "";
-
         if (!textToCopy) {
           alert("沒有訂單內容可複製！");
           return;
         }
-
         navigator.clipboard.writeText(textToCopy).then(() => {
           alert("✅ 訂單內容已複製（含備註）！");
         });
