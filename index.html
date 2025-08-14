@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+<<<<<<< HEAD
     <title>FLM 訂貨輔助工具</title>
+=======
+    <title>FLM訂貨輔助工具</title>
+>>>>>>> a474662 (修改複製備註)
     <style>
       body {
         font-family: sans-serif;
@@ -64,7 +68,11 @@
     </style>
   </head>
   <body>
+<<<<<<< HEAD
     <h2>FLM 訂貨輔助工具</h2>
+=======
+    <h2>FLM訂貨輔助工具</h2>
+>>>>>>> a474662 (修改複製備註)
 
     <label for="store-select">請選擇店家：</label>
     <select id="store-select" onchange="filterItems()">
@@ -97,15 +105,13 @@
     <pre id="order-summary"></pre>
 
     <script>
-      // Google Sheet 分頁列表，請根據你需求修改
       const sheetApiBase =
         "https://opensheet.vercel.app/1uzqHTQxyhYxTtU6SNbgme46i3rrjyUDfj4iq9IFQjFY/";
       const sheetIds = ["冷凍類", "常溫/包材類", "文具類", "清潔用品類"];
 
-      let allItems = []; // {element, category}
-      const expandStatus = {}; // 紀錄分類展開狀態
+      let allItems = [];
+      const expandStatus = {};
 
-      // 初始化訂貨日期為今天
       document.getElementById("order-date").valueAsDate = new Date();
 
       async function loadProducts() {
@@ -113,7 +119,6 @@
         container.innerHTML = "";
         allItems = [];
 
-        // 初始化展開狀態
         sheetIds.forEach((sheet) => (expandStatus[sheet] = false));
 
         for (const sheetName of sheetIds) {
@@ -136,7 +141,6 @@
 
             data.forEach((item) => {
               const storeField = (item.店家 || "").replace(/\s/g, "");
-              // 商品包含屬性：name, 規格, 單位, 店家
               const div = document.createElement("div");
               div.className = "item";
               div.setAttribute("data-name", item.name || "");
@@ -146,13 +150,13 @@
               div.setAttribute("data-category", sheetName);
 
               div.innerHTML = `
-            <label>
-              <span>${item.name}（規格:${item.規格 || ""} / 單位:${
+                <label>
+                  <span>${item.name}（規格:${item.規格 || ""} / 單位:${
                 item.單位 || ""
               }）</span>
-              <input type="number" min="0" value="0" />
-            </label>
-          `;
+                  <input type="number" min="0" value="0" />
+                </label>
+              `;
 
               listDiv.appendChild(div);
               allItems.push({ element: div, category: sheetName });
@@ -182,12 +186,10 @@
         listDiv.style.display = expandStatus[sheetName] ? "block" : "none";
       }
 
-      // 篩選邏輯結合店家與搜尋
       function filterItems() {
         const store = document.getElementById("store-select").value.trim();
         const keyword = document.getElementById("search").value.toLowerCase();
 
-        // 篩選符合條件的商品並顯示，不符合則隱藏
         const matchedCategories = new Set();
 
         allItems.forEach(({ element, category }) => {
@@ -212,64 +214,12 @@
           if (matched) matchedCategories.add(category);
         });
 
-        // 自動展開有匹配的分類，收合沒有匹配的
         sheetIds.forEach((sheet) => {
           expandStatus[sheet] = matchedCategories.has(sheet);
           updateSectionDisplay(sheet);
         });
       }
 
-      // 產生訂單摘要
-      function generateSummary() {
-        const store = document.getElementById("store-select").value;
-        if (!store) {
-          alert("請先選擇店家");
-          return;
-        }
-
-        const orderDate = document.getElementById("order-date").value;
-        const remark = document.getElementById("remark").value.trim();
-
-        const selected = [];
-        const unselected = [];
-
-        // 只處理可見且有顯示的商品
-        allItems.forEach(({ element }) => {
-          if (element.style.display === "flex") {
-            const qtyInput = element.querySelector("input[type='number']");
-            const qty = parseInt(qtyInput.value, 10) || 0;
-            const name = element.getAttribute("data-name");
-            const unit = element.getAttribute("data-unit") || "";
-
-            if (qty > 0) {
-              selected.push(`${name} x ${qty} ${unit}`);
-            } else {
-              unselected.push(name);
-            }
-          }
-        });
-
-        let summary = `店家：${store}\n`;
-        summary += `訂貨日期：${orderDate}\n\n`;
-
-        summary += "🛒 已選擇品項：\n";
-        summary += selected.length ? selected.join("\n") : "（無）";
-
-        summary += "\n\n📦 未選擇品項：\n";
-        summary += unselected.length ? unselected.join("\n") : "（無）";
-
-        if (remark) {
-          summary += `\n\n📝 備註：\n${remark}`;
-        }
-
-        const summaryEl = document.getElementById("order-summary");
-        summaryEl.textContent = summary;
-
-        const copyBtn = document.getElementById("copy-btn");
-        copyBtn.style.display = "block";
-      }
-
-      // 複製摘要
       function generateSummary() {
         const store = document.getElementById("store-select").value;
         if (!store) {
@@ -299,26 +249,21 @@
         });
 
         let summary = `店家：${store}\n訂貨日期：${orderDate}\n\n`;
-
-        summary += "訂貨品項";
+        summary += "訂貨品項：\n";
         summary += selected.length ? selected.join("\n") : "（無）";
 
-        // 未選品項只在畫面顯示，不加入複製內容
+        if (remark) {
+          summary += `\n\n備註：\n${remark}`;
+        }
+
         let displayText = summary + "\n\n📦 未選擇品項（僅顯示，不複製）：\n";
         displayText += unselected.length ? unselected.join("\n") : "（無）";
 
-        if (remark) {
-          displayText += `\n\n📝 備註：\n${remark}`;
-        }
-
         const summaryEl = document.getElementById("order-summary");
         summaryEl.textContent = displayText;
-
-        const copyBtn = document.getElementById("copy-btn");
-        copyBtn.style.display = "block";
-
-        // 將要複製的純文字放在一個隱藏屬性，供複製使用
         summaryEl.setAttribute("data-copy-text", summary);
+
+        document.getElementById("copy-btn").style.display = "block";
       }
 
       function copySummary() {
@@ -331,7 +276,7 @@
         }
 
         navigator.clipboard.writeText(textToCopy).then(() => {
-          alert("已複製訂單內容！");
+          alert("✅ 訂單內容已複製（含備註）！");
         });
       }
 
