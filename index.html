@@ -238,6 +238,7 @@
       <option value="">-- 請選擇店家 --</option>
       <option value="漢神店">漢神店</option>
       <option value="巨蛋店">巨蛋店</option>
+      <option value="台中店">台中店</option>
     </select>
 
     <label for="order-date">訂貨日期：</label>
@@ -324,7 +325,8 @@
 
               // 設定多店區域屬性（支援巨蛋店、漢神店、第三店等）
               Object.keys(item).forEach((key) => {
-                if (["漢神店", "巨蛋店", "第三店"].includes(key)) {
+                // 排除固定欄位，只抓店家名稱的欄位
+                if (!["id", "name", "規格", "單位", "箱入數"].includes(key)) {
                   div.setAttribute(`data-${key}`, item[key] || "無");
                 }
               });
