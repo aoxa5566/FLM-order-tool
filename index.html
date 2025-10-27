@@ -212,6 +212,21 @@
           height: 40px;
           font-size: 16px;
         }
+        .button-container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 8px;
+          position: fixed;
+          bottom: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(255, 255, 255, 0.8);
+          padding: 10px;
+          border-radius: 16px;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+          z-index: 100;
+        }
       }
     </style>
   </head>
@@ -264,7 +279,6 @@
     </div>
 
     <pre id="order-summary"></pre>
-
     <script>
       const sheetApiBase =
         "https://opensheet.vercel.app/1uzqHTQxyhYxTtU6SNbgme46i3rrjyUDfj4iq9IFQjFY/";
@@ -298,8 +312,6 @@
             listDiv.className = "item-list";
 
             data.forEach((item) => {
-              const storeField = (item.店家 || "").replace(/\s/g, "");
-              const areaField = (item.區域 || "").replace(/\s/g, "");
               const boxCount = parseInt(item.箱入數, 10) || null;
 
               const div = document.createElement("div");
@@ -307,20 +319,25 @@
               div.setAttribute("data-name", item.name || "");
               div.setAttribute("data-spec", item.規格 || "");
               div.setAttribute("data-unit", item.單位 || "");
-              div.setAttribute("data-store", storeField);
-              div.setAttribute("data-area", areaField);
-              if (boxCount) div.setAttribute("data-boxcount", boxCount);
               div.setAttribute("data-category", sheetName);
+              div.setAttribute("data-boxcount", boxCount || "");
+
+              // 設定多店區域屬性（支援巨蛋店、漢神店、第三店等）
+              Object.keys(item).forEach((key) => {
+                if (["漢神店", "巨蛋店", "第三店"].includes(key)) {
+                  div.setAttribute(`data-${key}`, item[key] || "無");
+                }
+              });
 
               div.innerHTML = `
-  <label>
-    <span>${item.name}（規格:${item.規格} / 單位:${item.單位 || ""} / 區域:${
-                areaField || "未分類"
+                <label>
+                  <span>${item.name}（規格:${item.規格 || ""} / 單位:${
+                item.單位 || ""
               }）</span><br>
-    數量: <input type="number" min="0" value="0" class="pcs-input" style="width:80px">
-    <span class="calc-box"></span>
-  </label>
-  `;
+                  數量: <input type="number" min="0" value="0" class="pcs-input" style="width:80px">
+                  <span class="calc-box"></span>
+                </label>
+              `;
 
               const pcsInput = div.querySelector(".pcs-input");
               const calcSpan = div.querySelector(".calc-box");
@@ -380,20 +397,19 @@
         });
       }
 
+      // ✅ 改良後：依選擇的店家顯示正確區域
       function filterItems() {
         const store = document.getElementById("store-select").value.trim();
         const keyword = document.getElementById("search").value.toLowerCase();
         const matchedCategories = new Set();
 
         allItems.forEach(({ element, category }) => {
-          const storeField = element.getAttribute("data-store");
+          const areaField = element.getAttribute(`data-${store}`) || "無";
           const name = element.getAttribute("data-name").toLowerCase();
           const spec = element.getAttribute("data-spec").toLowerCase();
           const unit = element.getAttribute("data-unit").toLowerCase();
 
-          const matchesStore = store
-            ? storeField.split(",").includes(store)
-            : true;
+          const matchesStore = store ? areaField !== "無" : true;
           const matchesSearch =
             name.includes(keyword) ||
             spec.includes(keyword) ||
@@ -401,6 +417,19 @@
 
           const matched = matchesStore && matchesSearch;
           element.style.display = matched ? "flex" : "none";
+
+          // 在列表中動態更新區域顯示文字
+          const label = element.querySelector("label span");
+          if (label) {
+            label.innerHTML = `${element.getAttribute(
+              "data-name"
+            )}（規格:${element.getAttribute(
+              "data-spec"
+            )} / 單位:${element.getAttribute("data-unit")} / 區域:${
+              areaField || "未分類"
+            }）`;
+          }
+
           if (matched) matchedCategories.add(category);
         });
 
@@ -410,6 +439,7 @@
         });
       }
 
+      // ✅ 訂單輸出依店家正確區域分類
       function generateSummary() {
         const store = document.getElementById("store-select").value;
         if (!store) {
@@ -429,7 +459,7 @@
             parseInt(element.querySelector(".pcs-input").value, 10) || 0;
           const name = element.getAttribute("data-name");
           const unit = element.getAttribute("data-unit") || "";
-          const area = element.getAttribute("data-area") || "未分類";
+          const area = element.getAttribute(`data-${store}`) || "未分類";
           const boxCount =
             parseInt(element.getAttribute("data-boxcount"), 10) || null;
 
@@ -454,6 +484,7 @@
 
         let summary = `${store}\n訂貨日期：${orderDate}\n\n`;
         Object.keys(areaGroups).forEach((area) => {
+          if (area === "無" || area === "未分類") return;
           summary += `${area}\n`;
           summary += areaGroups[area].length
             ? areaGroups[area].join("\n")
@@ -465,6 +496,7 @@
 
         let displayText = summary + "📦 未選擇品項（僅顯示，不複製）：\n";
         Object.keys(unselectedGroups).forEach((area) => {
+          if (area === "無" || area === "未分類") return;
           displayText += `${area}\n`;
           displayText += unselectedGroups[area].length
             ? unselectedGroups[area].join("\n")
