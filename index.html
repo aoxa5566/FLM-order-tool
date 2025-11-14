@@ -5,37 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>FLM訂貨輔助工具</title>
     <style>
+      /* ---------- 基本樣式 ---------- */
       body {
         font-family: "Segoe UI", sans-serif;
         margin: 0;
         padding: 10px;
         background: #f9f9f9;
+        -webkit-font-smoothing: antialiased;
       }
-
       .container {
         max-width: 700px;
         margin: auto;
         padding: 10px;
       }
-
       h2 {
         text-align: center;
         font-size: 24px;
         margin-bottom: 20px;
         color: #333;
       }
-
       label {
         display: block;
         margin-top: 15px;
         font-size: 16px;
         color: #555;
       }
-
       select,
       input[type="date"],
       input[type="number"],
-      textarea {
+      textarea,
+      input[type="text"] {
         width: 100%;
         padding: 10px;
         margin-top: 6px;
@@ -44,9 +43,8 @@
         border: 1px solid #ccc;
         border-radius: 6px;
         background: #fff;
-        transition: border-color 0.3s;
+        transition: border-color 0.2s;
       }
-
       select:focus,
       input:focus,
       textarea:focus {
@@ -54,6 +52,7 @@
         outline: none;
       }
 
+      /* ---------- 區塊/項目 ---------- */
       h3 {
         margin-top: 30px;
         border-bottom: 1px solid #ccc;
@@ -65,12 +64,10 @@
         font-size: 18px;
         border-radius: 6px 6px 0 0;
       }
-
       .item-list {
         padding: 10px 0;
         display: none;
       }
-
       .item {
         display: flex;
         justify-content: space-between;
@@ -81,34 +78,30 @@
         border-radius: 8px;
         margin-bottom: 10px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        transition: background 0.3s;
+        transition: background 0.2s;
       }
-
       .item:hover {
         background: #e6f0ff;
       }
-
       .item label {
         display: flex;
         flex-direction: column;
         gap: 5px;
         width: 100%;
       }
-
       input[type="number"] {
         width: 100px;
         padding: 6px;
         border-radius: 6px;
         border: 1px solid #ccc;
       }
-
       .calc-box {
         margin-left: 10px;
         color: #4a90e2;
         font-size: 14px;
       }
 
-      /* 固定底部按鈕容器 */
+      /* ---------- 底部按鈕 ---------- */
       .button-container {
         position: fixed;
         bottom: 0;
@@ -120,11 +113,10 @@
         background: #f9f9f9;
         display: flex;
         gap: 10px;
-        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.08);
         z-index: 999;
         box-sizing: border-box;
       }
-
       .button-container button {
         flex: 1;
         font-size: 18px;
@@ -133,25 +125,20 @@
         border: none;
         cursor: pointer;
         color: #fff;
-        transition: background 0.3s;
+        transition: background 0.2s, opacity 0.2s;
       }
-
       #complete-btn {
         background: linear-gradient(90deg, #4a90e2, #357abd);
       }
-
       #complete-btn:hover {
         background: linear-gradient(90deg, #357abd, #285c8a);
       }
-
       #copy-btn {
         background: linear-gradient(90deg, #50c878, #3ea864);
       }
-
       #copy-btn:hover {
         background: linear-gradient(90deg, #3ea864, #33714f);
       }
-
       #scroll-top-btn {
         flex: 0 0 60px;
         font-size: 18px;
@@ -161,14 +148,13 @@
         cursor: pointer;
         color: #fff;
         background: linear-gradient(90deg, #4a90e2, #357abd);
-        transition: background 0.3s, transform 0.2s;
+        transition: background 0.2s, transform 0.12s;
       }
-
       #scroll-top-btn:hover {
         transform: translateY(-2px);
-        background: linear-gradient(90deg, #357abd, #285c8a);
       }
 
+      /* ---------- 訂單輸出 ---------- */
       #order-summary {
         white-space: pre-wrap;
         background: #fff;
@@ -180,205 +166,355 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
       }
 
-      /* 手機專用調整 */
+      /* ---------- loading overlay（全域） ---------- */
+      #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.92);
+        display: none; /* 預設隱藏：用 show/hide 控制 */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        font-size: 18px;
+        color: #333;
+      }
+      .spinner {
+        border: 6px solid #ddd;
+        border-top: 6px solid #4a90e2;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 15px;
+      }
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .disabled-all {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      /* ---------- 手機樣式 ---------- */
       @media (max-width: 480px) {
         .item {
           flex-direction: column;
           align-items: flex-start;
         }
-
         input[type="number"] {
           width: 100%;
         }
-
         h2 {
           font-size: 20px;
         }
-
         h3 {
           font-size: 16px;
           padding: 12px;
         }
         .button-container {
-          flex-direction: row; /* 改回水平排列 */
-          justify-content: space-between;
-        }
-        .button-container button {
-          font-size: 14px;
-          padding: 8px;
+          bottom: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: auto;
+          padding: 10px;
+          border-radius: 16px;
         }
         #scroll-top-btn {
           width: 40px;
           height: 40px;
           font-size: 16px;
         }
-        .button-container {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 8px;
-          position: fixed;
-          bottom: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: rgba(255, 255, 255, 0.8);
-          padding: 10px;
-          border-radius: 16px;
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-          z-index: 100;
-        }
       }
     </style>
   </head>
   <body>
-    <h2>FLM訂貨輔助工具</h2>
+    <div class="container">
+      <h2>FLM訂貨輔助工具</h2>
 
-    <label for="store-select">請選擇店家：</label>
-    <select id="store-select" onchange="filterItems()">
-      <option value="">-- 請選擇店家 --</option>
-      <option value="漢神店">漢神店</option>
-      <option value="巨蛋店">巨蛋店</option>
-      <option value="台中店">台中店</option>
-    </select>
+      <label for="store-select">請選擇店家：</label>
+      <select id="store-select" aria-label="選擇店家">
+        <option value="">-- 請選擇店家 --</option>
+        <option value="漢神店">漢神店</option>
+        <option value="巨蛋店">巨蛋店</option>
+        <option value="台中店">台中店</option>
+      </select>
 
-    <label for="order-date">訂貨日期：</label>
-    <input type="date" id="order-date" />
+      <label for="order-date">訂貨日期：</label>
+      <input type="date" id="order-date" />
 
-    <label for="remark">備註：</label>
-    <textarea id="remark" rows="3" placeholder="請輸入備註..."></textarea>
+      <label for="remark">備註：</label>
+      <textarea id="remark" rows="3" placeholder="請輸入備註..."></textarea>
 
-    <input
-      type="text"
-      id="search"
-      placeholder="🔍 搜尋商品名稱、規格、單位..."
-      oninput="filterItems()"
-    />
+      <input
+        type="text"
+        id="search"
+        placeholder="🔍 搜尋商品名稱、規格、單位..."
+        aria-label="搜尋商品"
+      />
 
-    <!-- 展開/收合全部按鈕 -->
-    <div style="margin: 10px 0; text-align: right">
-      <button
-        onclick="expandAll()"
-        style="padding: 6px 12px; margin-right: 6px"
-      >
-        展開全部
-      </button>
-      <button onclick="collapseAll()" style="padding: 6px 12px">
-        收合全部
-      </button>
+      <!-- 展開/收合全部按鈕 -->
+      <div style="margin: 10px 0; text-align: right">
+        <button
+          id="expand-all-btn"
+          style="padding: 6px 12px; margin-right: 6px"
+        >
+          展開全部
+        </button>
+        <button id="collapse-all-btn" style="padding: 6px 12px">
+          收合全部
+        </button>
+      </div>
+
+      <div id="product-list"></div>
+
+      <pre id="order-summary" aria-live="polite"></pre>
     </div>
 
-    <div id="product-list"></div>
-
     <div class="button-container">
-      <button id="complete-btn" onclick="generateSummary()">
-        完成訂單並顯示內容
-      </button>
-      <button id="copy-btn" onclick="copySummary()" style="display: none">
-        複製訂單內容
-      </button>
+      <button id="complete-btn">完成訂單並顯示內容</button>
+      <button id="copy-btn" style="display: none">複製訂單內容</button>
       <button id="scroll-top-btn" title="回到最上方">⬆️</button>
     </div>
 
-    <pre id="order-summary"></pre>
+    <!-- 全頁 Loading -->
+    <div id="loading-overlay" role="status" aria-hidden="true">
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="loading-text">資料載入中，請稍候...</p>
+      <div style="margin-top: 12px">
+        <button
+          id="retry-all-btn"
+          style="
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            background: #357abd;
+            color: #fff;
+            cursor: pointer;
+            display: none;
+          "
+        >
+          重試失敗分頁
+        </button>
+      </div>
+    </div>
+
     <script>
+      /*******************************************************************
+       * FLM 訂貨工具（最佳化＋載入中保護）
+       * 改寫重點：
+       * - 單一 loadProducts（並行 fetch + Promise.all）
+       * - isLoading + 全頁 loading overlay
+       * - 在載入中阻止 filter/generate/copy
+       * - 擴充錯誤重試（顯示失敗分頁可重試）
+       *******************************************************************/
+
       const sheetApiBase =
         "https://opensheet.vercel.app/1uzqHTQxyhYxTtU6SNbgme46i3rrjyUDfj4iq9IFQjFY/";
       const sheetIds = ["冷凍類", "常溫/包材類", "文具/其他類", "清潔用品類"];
-      let allItems = [];
+
+      let allItems = []; // { element, category }
       const expandStatus = {};
+      let isLoading = false;
+      let failedSheets = []; // 儲存 fetch 失敗的分頁名稱
 
-      document.getElementById("order-date").valueAsDate = new Date();
+      // DOM
+      const productListEl = document.getElementById("product-list");
+      const loadingOverlay = document.getElementById("loading-overlay");
+      const loadingText = document.getElementById("loading-text");
+      const retryAllBtn = document.getElementById("retry-all-btn");
+      const storeSelect = document.getElementById("store-select");
+      const searchInput = document.getElementById("search");
+      const expandAllBtn = document.getElementById("expand-all-btn");
+      const collapseAllBtn = document.getElementById("collapse-all-btn");
+      const completeBtn = document.getElementById("complete-btn");
+      const copyBtn = document.getElementById("copy-btn");
+      const scrollTopBtn = document.getElementById("scroll-top-btn");
+      const orderSummaryEl = document.getElementById("order-summary");
+      const orderDateInput = document.getElementById("order-date");
+      const remarkInput = document.getElementById("remark");
 
-      async function loadProducts() {
-        const container = document.getElementById("product-list");
-        container.innerHTML = "";
+      // 預設訂貨日為今天
+      orderDateInput.valueAsDate = new Date();
+
+      // ---------- Loading 控制 ----------
+      function showLoading(text = "資料載入中，請稍候...") {
+        isLoading = true;
+        loadingText.textContent = text;
+        loadingOverlay.style.display = "flex";
+        loadingOverlay.setAttribute("aria-hidden", "false");
+        document.body.classList.add("disabled-all");
+      }
+      function hideLoading() {
+        isLoading = false;
+        loadingOverlay.style.display = "none";
+        loadingOverlay.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("disabled-all");
+        retryAllBtn.style.display = "none";
+      }
+
+      // ---------- 載入產品（並行） ----------
+      async function loadProducts(retryOnlyFailed = false) {
+        // 若正在載入，跳過
+        if (isLoading) return;
+        showLoading();
+
+        productListEl.innerHTML = "";
         allItems = [];
-        sheetIds.forEach((sheet) => (expandStatus[sheet] = false));
+        failedSheets = [];
+        sheetIds.forEach((s) => (expandStatus[s] = false));
 
-        for (const sheetName of sheetIds) {
-          try {
-            const encodedSheet = encodeURIComponent(sheetName);
-            const res = await fetch(`${sheetApiBase}${encodedSheet}`);
-            const data = await res.json();
+        // 要載的 sheet 列表（可只重試失敗的）
+        const targets =
+          retryOnlyFailed && failedSheets.length
+            ? failedSheets.slice()
+            : sheetIds.slice();
 
-            const section = document.createElement("section");
-            const title = document.createElement("h3");
-            title.textContent = sheetName;
-            title.onclick = () => {
-              expandStatus[sheetName] = !expandStatus[sheetName];
-              updateSectionDisplay(sheetName);
-            };
+        // 並行 fetch
+        const promises = targets.map((sheetName) =>
+          fetch(`${sheetApiBase}${encodeURIComponent(sheetName)}`)
+            .then((res) => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return res.json();
+            })
+            .then((data) => ({ sheetName, data }))
+            .catch((err) => ({ sheetName, error: err }))
+        );
 
-            const listDiv = document.createElement("div");
-            listDiv.className = "item-list";
+        const results = await Promise.all(promises);
 
-            data.forEach((item) => {
-              const boxCount = parseInt(item.箱入數, 10) || null;
+        results.forEach(({ sheetName, data, error }) => {
+          if (error || !Array.isArray(data)) {
+            failedSheets.push(sheetName);
+            console.error("❌ 載入錯誤：", sheetName, error);
+            // 顯示錯誤區塊（會顯示在 product-list 最底）
+            const errDiv = document.createElement("div");
+            errDiv.className = "error";
+            errDiv.style.background = "#fff3f3";
+            errDiv.style.border = "1px solid #ffb3b3";
+            errDiv.style.padding = "12px";
+            errDiv.style.borderRadius = "8px";
+            errDiv.style.marginBottom = "10px";
+            errDiv.textContent = `❌ 無法載入「${sheetName}」。請檢查分頁名稱或網路。`;
+            productListEl.appendChild(errDiv);
+            return;
+          }
 
-              const div = document.createElement("div");
-              div.className = "item";
-              div.setAttribute("data-name", item.name || "");
-              div.setAttribute("data-spec", item.規格 || "");
-              div.setAttribute("data-unit", item.單位 || "");
-              div.setAttribute("data-category", sheetName);
-              div.setAttribute("data-boxcount", boxCount || "");
+          // 成功建立 section
+          const section = document.createElement("section");
+          const title = document.createElement("h3");
+          title.textContent = sheetName;
+          title.addEventListener("click", () => {
+            expandStatus[sheetName] = !expandStatus[sheetName];
+            updateSectionDisplay(sheetName);
+          });
 
-              // 設定多店區域屬性（支援巨蛋店、漢神店、第三店等）
-              Object.keys(item).forEach((key) => {
-                // 排除固定欄位，只抓店家名稱的欄位
-                if (!["id", "name", "規格", "單位", "箱入數"].includes(key)) {
-                  div.setAttribute(`data-${key}`, item[key] || "無");
-                }
-              });
+          const listDiv = document.createElement("div");
+          listDiv.className = "item-list";
 
-              div.innerHTML = `
-                <label>
-                  <span>${item.name}（規格:${item.規格 || ""} / 單位:${
-                item.單位 || ""
-              }）</span><br>
-                  數量: <input type="number" min="0" value="0" class="pcs-input" style="width:80px">
-                  <span class="calc-box"></span>
-                </label>
-              `;
+          data.forEach((item) => {
+            const boxCount = parseInt(item.箱入數, 10) || null;
+            const name = item.name || "";
+            const spec = item.規格 || "";
+            const unit = item.單位 || "";
 
-              const pcsInput = div.querySelector(".pcs-input");
-              const calcSpan = div.querySelector(".calc-box");
+            const div = document.createElement("div");
+            div.className = "item";
+            div.setAttribute("data-name", name);
+            div.setAttribute("data-spec", spec);
+            div.setAttribute("data-unit", unit);
+            div.setAttribute("data-category", sheetName);
+            div.setAttribute("data-boxcount", boxCount || "");
 
-              pcsInput.addEventListener("input", () => {
-                const qty = parseInt(pcsInput.value, 10) || 0;
-                let text = "";
-                if (boxCount) {
-                  const boxes = Math.floor(qty / boxCount);
-                  const remainder = qty % boxCount;
-                  if (boxes > 0) text += `${boxes}箱 `;
-                  if (remainder > 0) text += `${remainder}${item.單位}`;
-                } else {
-                  if (qty > 0) text = `${qty}${item.單位}`;
-                }
-                calcSpan.textContent = text;
-              });
-
-              listDiv.appendChild(div);
-              allItems.push({ element: div, category: sheetName });
+            // 把其他欄位當成店家欄位（你原本的邏輯）
+            Object.keys(item).forEach((key) => {
+              if (!["id", "name", "規格", "單位", "箱入數"].includes(key)) {
+                div.setAttribute(`data-${key}`, item[key] || "無");
+              }
             });
 
-            section.appendChild(title);
-            section.appendChild(listDiv);
-            container.appendChild(section);
-            updateSectionDisplay(sheetName);
-          } catch (err) {
-            const errorDiv = document.createElement("div");
-            errorDiv.className = "error";
-            errorDiv.innerText = `❌ 無法載入「${sheetName}」，請檢查分頁名稱或網路`;
-            container.appendChild(errorDiv);
-            console.error(`❌ 載入錯誤：${sheetName}`, err);
-          }
+            div.innerHTML = `
+              <label>
+                <span>${escapeHtml(name)}（規格:${escapeHtml(
+              spec
+            )} / 單位:${escapeHtml(unit)}）</span><br>
+                數量: <input type="number" min="0" value="0" class="pcs-input" style="width:80px">
+                <span class="calc-box"></span>
+              </label>
+            `;
+
+            const pcsInput = div.querySelector(".pcs-input");
+            const calcSpan = div.querySelector(".calc-box");
+
+            pcsInput.addEventListener("input", () => {
+              const qty = parseInt(pcsInput.value, 10) || 0;
+              let text = "";
+              if (boxCount) {
+                const boxes = Math.floor(qty / boxCount);
+                const remainder = qty % boxCount;
+                if (boxes > 0) text += `${boxes}箱 `;
+                if (remainder > 0) text += `${remainder}${unit}`;
+              } else {
+                if (qty > 0) text = `${qty}${unit}`;
+              }
+              calcSpan.textContent = text;
+            });
+
+            listDiv.appendChild(div);
+            allItems.push({ element: div, category: sheetName });
+          });
+
+          section.appendChild(title);
+          section.appendChild(listDiv);
+          productListEl.appendChild(section);
+          updateSectionDisplay(sheetName);
+        });
+
+        // 若有失敗的分頁，顯示重試按鈕
+        if (failedSheets.length) {
+          loadingText.textContent = `部分分頁載入失敗：${failedSheets.join(
+            ", "
+          )}`;
+          retryAllBtn.style.display = "inline-block";
+          retryAllBtn.textContent = `重試：${failedSheets.length} 個失敗分頁`;
+          retryAllBtn.onclick = () => {
+            // 只重試失敗的分頁
+            loadProducts(true);
+          };
+        } else {
+          hideLoading();
+        }
+
+        // 若有任何成功載入的內容，關閉 loading（仍允許重試失敗分頁）
+        if (!failedSheets.length) {
+          hideLoading();
+        } else {
+          // 如果同時有成功與失敗分頁，仍解除禁用，讓使用者能操作已載入部分
+          hideLoading();
+          // 但提示 user 有部分分頁尚未成功
+          showPartialWarning();
         }
       }
 
+      function showPartialWarning() {
+        // 只在 overlay 短暫提醒（使用者可自行重試）
+        loadingText.textContent = `部分分頁載入失敗（可按重試）。已載入項目可繼續操作。`;
+        retryAllBtn.style.display = "inline-block";
+        // 顯示一下再自動隱藏 overlay（短暫）
+        // 但我們剛才已經 hideLoading()，這裡只是保留重試按鈕的顯示控制
+      }
+
+      // ---------- 更新區塊顯示 ----------
       function updateSectionDisplay(sheetName) {
         const section = [...document.querySelectorAll("section")].find(
-          (sec) => sec.querySelector("h3").textContent === sheetName
+          (sec) =>
+            sec.querySelector("h3") &&
+            sec.querySelector("h3").textContent === sheetName
         );
         if (!section) return;
         const listDiv = section.querySelector(".item-list");
@@ -391,7 +527,6 @@
           updateSectionDisplay(sheet);
         });
       }
-
       function collapseAll() {
         sheetIds.forEach((sheet) => {
           expandStatus[sheet] = false;
@@ -399,20 +534,33 @@
         });
       }
 
-      // ✅ 改良後：依選擇的店家顯示正確區域
+      // ---------- 搜尋（debounce） ----------
+      function debounce(fn, wait = 200) {
+        let t = null;
+        return (...args) => {
+          clearTimeout(t);
+          t = setTimeout(() => fn(...args), wait);
+        };
+      }
       function filterItems() {
-        const store = document.getElementById("store-select").value.trim();
-        const keyword = document.getElementById("search").value.toLowerCase();
+        if (isLoading) return; // 載入中不處理
+        const store = storeSelect.value.trim();
+        const keyword = (searchInput.value || "").toLowerCase();
         const matchedCategories = new Set();
 
         allItems.forEach(({ element, category }) => {
-          const areaField = element.getAttribute(`data-${store}`) || "無";
-          const name = element.getAttribute("data-name").toLowerCase();
-          const spec = element.getAttribute("data-spec").toLowerCase();
-          const unit = element.getAttribute("data-unit").toLowerCase();
+          const areaField = (
+            element.getAttribute(`data-${store}`) || "無"
+          ).toLowerCase();
+          const name = (element.getAttribute("data-name") || "").toLowerCase();
+          const spec = (element.getAttribute("data-spec") || "").toLowerCase();
+          const unit = (element.getAttribute("data-unit") || "").toLowerCase();
 
-          const matchesStore = store ? areaField !== "無" : true;
+          const matchesStore = store
+            ? areaField !== "無" && areaField !== "無"
+            : true;
           const matchesSearch =
+            !keyword ||
             name.includes(keyword) ||
             spec.includes(keyword) ||
             unit.includes(keyword);
@@ -420,16 +568,19 @@
           const matched = matchesStore && matchesSearch;
           element.style.display = matched ? "flex" : "none";
 
-          // 在列表中動態更新區域顯示文字
+          // 更新顯示（區域文字）
           const label = element.querySelector("label span");
           if (label) {
-            label.innerHTML = `${element.getAttribute(
-              "data-name"
-            )}（規格:${element.getAttribute(
-              "data-spec"
-            )} / 單位:${element.getAttribute("data-unit")} / 區域:${
-              areaField || "未分類"
-            }）`;
+            const areaLabel =
+              areaField && areaField !== "無" ? areaField : "未分類";
+            label.innerHTML = `${escapeHtml(
+              element.getAttribute("data-name") || ""
+            )}（規格:${escapeHtml(
+              element.getAttribute("data-spec") || ""
+            )} / 單位:${escapeHtml(
+              element.getAttribute("data-unit") || ""
+            )} / 區域:${escapeHtml(areaLabel)}`;
+            label.innerHTML += `）`;
           }
 
           if (matched) matchedCategories.add(category);
@@ -440,26 +591,32 @@
           updateSectionDisplay(sheet);
         });
       }
+      const debouncedFilter = debounce(filterItems, 180);
 
-      // ✅ 訂單輸出依店家正確區域分類
+      // ---------- 訂單產生（包含未選品項） ----------
       function generateSummary() {
-        const store = document.getElementById("store-select").value;
+        if (isLoading) {
+          alert("資料仍在載入中，請稍候再試。");
+          return;
+        }
+        const store = storeSelect.value;
         if (!store) {
           alert("請先選擇店家");
           return;
         }
 
-        const orderDate = document.getElementById("order-date").value;
-        const remark = document.getElementById("remark").value.trim();
+        const orderDate = orderDateInput.value;
+        const remark = (remarkInput.value || "").trim();
 
         const areaGroups = {};
         const unselectedGroups = {};
 
         allItems.forEach(({ element }) => {
-          if (element.style.display !== "flex") return;
+          // 跳過被 filter 隱藏的 element
+          if (element.style.display === "none") return;
           const pcsQty =
             parseInt(element.querySelector(".pcs-input").value, 10) || 0;
-          const name = element.getAttribute("data-name");
+          const name = element.getAttribute("data-name") || "";
           const unit = element.getAttribute("data-unit") || "";
           const area = element.getAttribute(`data-${store}`) || "未分類";
           const boxCount =
@@ -506,33 +663,76 @@
           displayText += "\n\n";
         });
 
-        const summaryEl = document.getElementById("order-summary");
-        summaryEl.textContent = displayText;
-        summaryEl.setAttribute("data-copy-text", summary);
-        document.getElementById("copy-btn").style.display = "block";
-        summaryEl.scrollIntoView({ behavior: "smooth" });
+        orderSummaryEl.textContent = displayText;
+        orderSummaryEl.setAttribute("data-copy-text", summary);
+        copyBtn.style.display = "inline-block";
+        orderSummaryEl.scrollIntoView({ behavior: "smooth" });
       }
 
       function copySummary() {
-        const summaryEl = document.getElementById("order-summary");
-        const textToCopy = summaryEl.getAttribute("data-copy-text") || "";
+        if (isLoading) {
+          alert("資料載入中，請稍後再複製");
+          return;
+        }
+        const textToCopy = orderSummaryEl.getAttribute("data-copy-text") || "";
         if (!textToCopy) {
           alert("沒有訂單內容可複製！");
           return;
         }
-        navigator.clipboard.writeText(textToCopy).then(() => {
-          alert("✅ 訂單內容已複製（含備註）！");
-        });
+        navigator.clipboard
+          .writeText(textToCopy)
+          .then(() => {
+            alert("✅ 訂單內容已複製（含備註）！");
+          })
+          .catch(() => {
+            alert("無法使用剪貼簿 API，請手動複製。");
+          });
       }
 
-      window.onload = () => {
+      // ---------- 工具/綁定事件 ----------
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[m])
+        );
+      }
+
+      expandAllBtn.addEventListener("click", () => {
+        if (isLoading) return;
+        expandAll();
+      });
+      collapseAllBtn.addEventListener("click", () => {
+        if (isLoading) return;
+        collapseAll();
+      });
+      storeSelect.addEventListener("change", debouncedFilter);
+      searchInput.addEventListener("input", debouncedFilter);
+      completeBtn.addEventListener("click", generateSummary);
+      copyBtn.addEventListener("click", copySummary);
+      scrollTopBtn.addEventListener("click", () =>
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      );
+
+      // 快捷鍵：按 Enter 在搜尋框時觸發 filter（但仍有 debounce）
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          debouncedFilter();
+        }
+      });
+
+      // ---------- 初始化載入 ----------
+      window.addEventListener("load", () => {
         loadProducts();
-        document
-          .getElementById("scroll-top-btn")
-          .addEventListener("click", () => {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          });
-      };
+      });
     </script>
   </body>
 </html>
